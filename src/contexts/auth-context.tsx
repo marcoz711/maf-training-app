@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup on unmount
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase.auth]);
 
   // Sign out function
   const signOut = async () => {

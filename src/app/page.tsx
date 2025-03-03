@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/ui/logout-button";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -22,30 +23,24 @@ export default function Home() {
               You are logged in as: <span className="font-bold">{user.email}</span>
             </p>
             <div className="flex gap-4">
-              <Link 
-                href="/profile" 
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
-                Your Profile
-              </Link>
+              <Button asChild>
+                <Link href="/profile">Your Profile</Link>
+              </Button>
               <LogoutButton />
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-amber-600">You are not currently logged in.</p>
-            <Link 
-              href="/login" 
-              className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-            >
-              Go to Login
-            </Link>
+            <Button asChild>
+              <Link href="/login">Go to Login</Link>
+            </Button>
           </div>
         )}
       </div>
       
       <p className="text-gray-700">
-        This is the main page of your application. The content here will change based on whether you're logged in or not.
+        This is the main page of your application. The content here will change based on whether you&apos;re logged in or not.
       </p>
     </main>
   );

@@ -17,8 +17,8 @@ export default function AuthPage() {
         await signIn(email, password);
       }
       window.location.href = "/"; // Redirect after login
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     }
   }
 
@@ -43,9 +43,13 @@ export default function AuthPage() {
       <Button onClick={handleAuth}>{isSignUp ? "Sign Up" : "Login"}</Button>
       <p className="mt-2">
         {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-        <button className="text-blue-500" onClick={() => setIsSignUp(!isSignUp)}>
+        <Button 
+          variant="link" 
+          className="p-0" 
+          onClick={() => setIsSignUp(!isSignUp)}
+        >
           {isSignUp ? "Login" : "Sign Up"}
-        </button>
+        </Button>
       </p>
     </div>
   );

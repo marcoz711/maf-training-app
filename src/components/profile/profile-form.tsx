@@ -132,12 +132,15 @@ export function ProfileForm() {
       <div className="max-w-md mx-auto mt-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Your Profile</h1>
-          <Link 
-            href="/" 
-            className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition flex items-center"
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
           >
-            <span>← Back to Home</span>
-          </Link>
+            <Link href="/">
+              <span>← Back to Home</span>
+            </Link>
+          </Button>
         </div>
         
         {apiError && <p className="text-red-500 mb-4">{apiError}</p>}
@@ -235,8 +238,9 @@ export function ProfileForm() {
 
         <Button 
           onClick={handleSave} 
-          className="w-full py-2 mt-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           disabled={saveStatus === "saving"}
+          size="lg"
+          className="w-full mt-6"
         >
           {saveStatus === "saving" ? "Saving..." : "Save Profile"}
         </Button>

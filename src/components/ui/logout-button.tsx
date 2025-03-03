@@ -1,12 +1,10 @@
 "use client";
 
 import { Button } from "./button";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context"; 
 import { useState } from "react";
 
 export function LogoutButton() {
-  const router = useRouter();
   const { signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   

@@ -2,7 +2,7 @@
  * Custom error for database operations
  */
 export class DatabaseError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: Error | unknown) {
     super(message);
     this.name = 'DatabaseError';
     
@@ -17,7 +17,7 @@ export class DatabaseError extends Error {
  * Custom error for authentication issues
  */
 export class AuthenticationError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: Error | unknown) {
     super(message);
     this.name = 'AuthenticationError';
     

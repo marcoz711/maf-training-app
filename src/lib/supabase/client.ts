@@ -1,5 +1,4 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { getRequiredEnv } from '@/utils/env';
 import { DatabaseError } from '@/utils/errors';
 
 // Create a singleton instance of the Supabase client
