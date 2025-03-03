@@ -1,34 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/ui/logout-button";
-
-console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function getUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      setLoading(false);
-    }
-
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="max-w-4xl mx-auto mt-10 p-6">Loading...</div>;
