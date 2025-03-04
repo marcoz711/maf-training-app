@@ -17,27 +17,6 @@ const FitnessSyncerConnection = () => {
   const [authCode, setAuthCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Check for status or error parameters in the URL
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
-    const errorMsg = params.get('error');
-    
-    if (status === 'connected') {
-      setConnectionStatus('Connected');
-      setIsConnected(true);
-    }
-    
-    if (errorMsg) {
-      setError(errorMsg);
-    }
-
-    // Check connection status on load
-    if (user) {
-      checkConnection();
-    }
-  }, [user]);
-
   const checkConnection = async () => {
     if (!user) return;
     
@@ -60,6 +39,27 @@ const FitnessSyncerConnection = () => {
       console.error('Error checking connection:', error);
     }
   };
+
+  useEffect(() => {
+    // Check for status or error parameters in the URL
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const errorMsg = params.get('error');
+    
+    if (status === 'connected') {
+      setConnectionStatus('Connected');
+      setIsConnected(true);
+    }
+    
+    if (errorMsg) {
+      setError(errorMsg);
+    }
+
+    // Check connection status on load
+    if (user) {
+      checkConnection();
+    }
+  }, [user]);
 
   const fetchDataSources = async () => {
     try {
@@ -175,7 +175,7 @@ const FitnessSyncerConnection = () => {
               <h3 className="text-lg font-medium mb-2">Step 2: Copy the authorization code</h3>
               <p className="text-sm text-gray-600 mb-2">
                 After authorizing, you'll be redirected to a URL like: <br />
-                <code className="bg-gray-200 px-2 py-1 rounded">https://personal.fitnesssyncer.com/?code=YOUR_CODE&state=connect</code>
+                <code className="bg-gray-200 px-2 py-1 rounded">https://personal.fitnesssyncer.com/?code=YOUR_CODE&amp;state=connect</code>
               </p>
               <p className="text-sm text-gray-600 mb-4">
                 Copy the code value (between "code=" and "&state=") and paste it below.
