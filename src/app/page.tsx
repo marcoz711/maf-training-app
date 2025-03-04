@@ -26,6 +26,9 @@ export default function Home() {
               <Button asChild>
                 <Link href="/profile">Your Profile</Link>
               </Button>
+              <Button asChild>
+                <Link href="/connect/fitnesssyncer">Connect to FitnessSyncer</Link>
+              </Button>
               <LogoutButton />
             </div>
           </div>
