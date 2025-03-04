@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 
 type DataSource = {
@@ -17,7 +17,7 @@ const FitnessSyncerConnection = () => {
   const [authCode, setAuthCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -38,7 +38,7 @@ const FitnessSyncerConnection = () => {
     } catch (error) {
       console.error('Error checking connection:', error);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     // Check for status or error parameters in the URL
@@ -59,7 +59,7 @@ const FitnessSyncerConnection = () => {
     if (user) {
       checkConnection();
     }
-  }, [user]);
+  }, [user, checkConnection]);
 
   const fetchDataSources = async () => {
     try {
@@ -178,7 +178,7 @@ const FitnessSyncerConnection = () => {
                 <code className="bg-gray-200 px-2 py-1 rounded">https://personal.fitnesssyncer.com/?code=YOUR_CODE&amp;state=connect</code>
               </p>
               <p className="text-sm text-gray-600 mb-4">
-                Copy the code value (between "code=" and "&state=") and paste it below.
+                Copy the code value (between &quot;code=&quot; and &quot;&amp;state=&quot;) and paste it below.
               </p>
               
               <form onSubmit={handleAuthCodeSubmit} className="space-y-3">
