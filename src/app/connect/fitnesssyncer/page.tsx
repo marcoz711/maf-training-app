@@ -17,51 +17,7 @@ const FitnessSyncerConnection = () => {
   const [authCode, setAuthCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkConnection = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      // First check if user is connected
-      const connectionResponse = await fetch('/api/fitnesssyncer/check-connection', {
-        headers: {
-          'x-user-id': user.id || '',
-        },
-      });
-      
-      const connectionData = await connectionResponse.json();
-      
-      if (connectionData.connected) {
-        setConnectionStatus('Connected');
-        setIsConnected(true);
-        fetchDataSources();
-      }
-    } catch (error) {
-      console.error('Error checking connection:', error);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    // Check for status or error parameters in the URL
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
-    const errorMsg = params.get('error');
-    
-    if (status === 'connected') {
-      setConnectionStatus('Connected');
-      setIsConnected(true);
-    }
-    
-    if (errorMsg) {
-      setError(errorMsg);
-    }
-
-    // Check connection status on load
-    if (user) {
-      checkConnection();
-    }
-  }, [user, checkConnection]);
-
-  const fetchDataSources = async () => {
+  const fetchDataSources = useCallback(async () => {
     try {
       const response = await fetch('/api/fitnesssyncer/data-sources', {
         headers: {
@@ -90,7 +46,51 @@ const FitnessSyncerConnection = () => {
       console.error('Error fetching data sources:', error);
       setDataSources([]);
     }
-  };
+  }, [user]);
+
+  const checkConnection = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      // First check if user is connected
+      const connectionResponse = await fetch('/api/fitnesssyncer/check-connection', {
+        headers: {
+          'x-user-id': user.id || '',
+        },
+      });
+      
+      const connectionData = await connectionResponse.json();
+      
+      if (connectionData.connected) {
+        setConnectionStatus('Connected');
+        setIsConnected(true);
+        fetchDataSources();
+      }
+    } catch (error) {
+      console.error('Error checking connection:', error);
+    }
+  }, [user, fetchDataSources]);
+
+  useEffect(() => {
+    // Check for status or error parameters in the URL
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const errorMsg = params.get('error');
+    
+    if (status === 'connected') {
+      setConnectionStatus('Connected');
+      setIsConnected(true);
+    }
+    
+    if (errorMsg) {
+      setError(errorMsg);
+    }
+
+    // Check connection status on load
+    if (user) {
+      checkConnection();
+    }
+  }, [user, checkConnection]);
 
   const handleConnect = async () => {
     try {
@@ -174,7 +174,7 @@ const FitnessSyncerConnection = () => {
             <div>
               <h3 className="text-lg font-medium mb-2">Step 2: Copy the authorization code</h3>
               <p className="text-sm text-gray-600 mb-2">
-                After authorizing, you'll be redirected to a URL like: <br />
+                After authorizing, you&apos;ll be redirected to a URL like: <br />
                 <code className="bg-gray-200 px-2 py-1 rounded">https://personal.fitnesssyncer.com/?code=YOUR_CODE&amp;state=connect</code>
               </p>
               <p className="text-sm text-gray-600 mb-4">
