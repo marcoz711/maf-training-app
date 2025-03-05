@@ -259,11 +259,29 @@ export function FitnessSyncerCodeEntry({ sessionId, state: propState }: FitnessS
       try {
         const supabase = createClient();
         
+        // First, get the current user's ID from the session
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (!sessionData?.session?.user?.id) {
+          throw new Error("User not authenticated. Please log in to save connection.");
+        }
+        
+        const userId = sessionData.session.user.id;
+        
+        if (debugEnabled && currentSessionId) {
+          logOAuthStep(
+            currentSessionId,
+            OAuthStage.TOKEN_STORE,
+            `Found authenticated user: ${userId.substring(0, 8)}...`
+          );
+        }
+        
         // Check if we have an existing connection
         const { data: existingConnections, error: fetchError } = await supabase
           .from("api_connections")
           .select("id")
           .eq("provider", "fitnesssyncer")
+          .eq("user_id", userId)  // Filter by the current user's ID
           .single();
           
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "No rows found"
@@ -284,8 +302,10 @@ export function FitnessSyncerCodeEntry({ sessionId, state: propState }: FitnessS
               status: "active",
               additional_info: JSON.stringify(data),
               updated_at: new Date().toISOString(),
+              // No need to include user_id in update as it shouldn't change
             })
-            .eq("id", existingConnections.id);
+            .eq("id", existingConnections.id)
+            .eq("user_id", userId);  // Make sure we're only updating the user's own record
             
           dbError = error;
         } 
@@ -302,6 +322,7 @@ export function FitnessSyncerCodeEntry({ sessionId, state: propState }: FitnessS
               additional_info: JSON.stringify(data),
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
+              user_id: userId,  // Explicitly set the user_id to the authenticated user
             });
             
           dbError = error;

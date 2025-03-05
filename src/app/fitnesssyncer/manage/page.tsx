@@ -37,18 +37,38 @@ export default function FitnessSyncerManagePage() {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetch('/api/fitnesssyncer/connection/status');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch connection status');
-        }
+        // Use the main connection endpoint we just created
+        const response = await fetch('/api/fitnesssyncer/connection', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Include cookies for authentication
+        });
         
         const data = await response.json();
+        
+        // Log for debugging
+        console.log('Connection response:', data);
+        
+        if (!response.ok) {
+          // Check if this is an authentication error
+          if (response.status === 401) {
+            // Redirect to login page
+            router.push('/login?message=Please login to manage your FitnessSyncer connection');
+            return;
+          }
+          
+          throw new Error(data.error || 'Failed to fetch connection status');
+        }
+        
         setConnectionDetails(data);
         
-        // If not connected, redirect to connect page
+        // If not connected, redirect to connect page after a short delay
         if (!data.connected) {
-          router.push('/fitnesssyncer/connect');
+          setTimeout(() => {
+            router.push('/fitnesssyncer/connect');
+          }, 1500);
         }
       } catch (err) {
         console.error('Error fetching connection details:', err);
@@ -138,6 +158,22 @@ export default function FitnessSyncerManagePage() {
         <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-md text-red-700">
           <p className="font-medium">Error:</p>
           <p>{error}</p>
+          <div className="mt-3">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => router.push('/fitnesssyncer/connect')}
+            >
+              Try Connecting Again
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {!isLoading && !error && connectionDetails && !connectionDetails.connected && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 rounded-md text-yellow-700">
+          <p className="font-medium">Not Connected</p>
+          <p>You don't have an active connection to FitnessSyncer. Redirecting to the connection page...</p>
         </div>
       )}
       

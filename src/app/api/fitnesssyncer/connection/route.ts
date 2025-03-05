@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
         `Token exchange response (${tokenResponse.status})`
       );
       
-      // For debugging purposes
+      // Additional debugging for scopes
       console.log("Token data:", {
         hasScope: !!tokenData.scope,
         scopeType: tokenData.scope ? typeof tokenData.scope : 'undefined',
@@ -252,8 +252,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Instead of trying to write directly to the database (which violates RLS),
-    // return the token to the client and let client-side code handle storing it
+    // Update user authentication info if needed
+    if (debugEnabled) {
+      logOAuthStep(
+        debugSessionId,
+        OAuthStage.TOKEN_EXCHANGE,
+        isAuthenticated 
+          ? `User is authenticated with ID: ${userId.substring(0, 8)}...`
+          : "No authenticated user found"
+      );
+    }
+
+    // Token exchange successful - return the tokens
     return NextResponse.json({
       success: true,
       message: "FitnessSyncer connection established successfully",
@@ -264,6 +274,8 @@ export async function POST(request: NextRequest) {
         : null,
       provider: "fitnesssyncer",
       scopes: tokenData.scope || "",
+      authenticated: isAuthenticated,
+      user_id: userId,
       debug_session_id: debugEnabled ? debugSessionId : undefined,
     });
   } catch (error) {
@@ -279,6 +291,141 @@ export async function POST(request: NextRequest) {
     console.error("Error connecting to FitnessSyncer:", error);
     return NextResponse.json(
       { error: "Failed to establish connection" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET handler for FitnessSyncer connection endpoint
+ * 
+ * Retrieves the current user's FitnessSyncer connection details
+ */
+export async function GET(request: NextRequest) {
+  const debugSessionId = generateSessionId();
+  const debugEnabled = isDebuggingEnabled();
+  
+  if (debugEnabled) {
+    logOAuthStep(
+      debugSessionId,
+      OAuthStage.CONNECTION_CHECK,
+      "Fetching connection details"
+    );
+  }
+  
+  try {
+    // Get the Supabase client with cookies for authentication
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Check if user is authenticated
+    if (!session?.user) {
+      if (debugEnabled) {
+        logOAuthError(
+          debugSessionId,
+          OAuthStage.CONNECTION_CHECK,
+          new Error("User not authenticated"),
+          "No user session found"
+        );
+      }
+      
+      return NextResponse.json(
+        { error: "User not authenticated", connected: false },
+        { status: 401 }
+      );
+    }
+    
+    // Fetch the user's FitnessSyncer connection
+    const { data, error } = await supabase
+      .from("api_connections")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .eq("provider", "fitnesssyncer")
+      .maybeSingle();
+    
+    if (error) {
+      if (debugEnabled) {
+        logOAuthError(
+          debugSessionId,
+          OAuthStage.CONNECTION_CHECK,
+          new Error("Database error"),
+          `Error fetching connection: ${error.message}`
+        );
+      }
+      
+      return NextResponse.json(
+        { error: "Failed to fetch connection details", details: error.message, connected: false },
+        { status: 500 }
+      );
+    }
+    
+    if (!data) {
+      if (debugEnabled) {
+        logOAuthStep(
+          debugSessionId,
+          OAuthStage.CONNECTION_CHECK,
+          "No connection found for user"
+        );
+      }
+      
+      return NextResponse.json({
+        connected: false,
+        status: "disconnected",
+        message: "No FitnessSyncer connection found for this user"
+      });
+    }
+    
+    // Check if the connection is valid and active
+    let isConnected = false;
+    
+    if (data.status === 'active' && data.access_token) {
+      // Check if token is expired (if expiry is provided)
+      if (data.token_expiry && typeof data.token_expiry === 'string') {
+        try {
+          const expiryDate = new Date(data.token_expiry);
+          isConnected = expiryDate > new Date();
+        } catch (e) {
+          console.error("Invalid token_expiry date format:", e);
+        }
+      } else {
+        // If no expiry date, consider it valid
+        isConnected = true;
+      }
+    }
+    
+    if (debugEnabled) {
+      logOAuthStep(
+        debugSessionId,
+        OAuthStage.CONNECTION_CHECK,
+        `Connection found, status: ${isConnected ? 'active' : 'inactive'}`
+      );
+    }
+    
+    // Return connection details
+    return NextResponse.json({
+      connected: isConnected,
+      status: data.status,
+      provider: data.provider,
+      connection_id: data.id,
+      expires_at: data.token_expiry,
+      last_updated: data.updated_at,
+      created_at: data.created_at,
+      scopes: data.scopes,
+      debug_session_id: debugEnabled ? debugSessionId : undefined
+    });
+  } catch (error) {
+    if (debugEnabled) {
+      logOAuthError(
+        debugSessionId,
+        OAuthStage.CONNECTION_CHECK,
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+        "Unexpected error fetching connection details"
+      );
+    }
+    
+    console.error("Error fetching FitnessSyncer connection:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch connection details", connected: false },
       { status: 500 }
     );
   }
