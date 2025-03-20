@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth-context';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import type { Profile, ProfileError } from '@/types/profile';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -20,7 +21,7 @@ export default function MAFQuestionnaire() {
   const [hasAdvancedTraining, setHasAdvancedTraining] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProfileError | null>(null);
 
   // Load user data
   useEffect(() => {
@@ -29,13 +30,13 @@ export default function MAFQuestionnaire() {
       setError(null);
 
       try {
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (supabaseError) throw supabaseError;
 
         if (data) {
           setAge(data.age?.toString() || '');
@@ -44,9 +45,10 @@ export default function MAFQuestionnaire() {
           setHasConsistentTraining(data.has_consistent_training);
           setHasAdvancedTraining(data.has_advanced_training);
         }
-      } catch (error: any) {
+      } catch (err) {
+        const error = err as Error;
         console.error('Error loading profile:', error);
-        setError(error.message || 'Error loading profile');
+        setError({ message: error.message });
       } finally {
         setLoading(false);
       }
@@ -54,34 +56,6 @@ export default function MAFQuestionnaire() {
 
     loadProfile();
   }, [user]);
-
-  // Save user data
-  const saveProfile = async () => {
-    if (!user) return;
-    setError(null);
-
-    try {
-      setSaving(true);
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          age: age ? parseInt(age) : null,
-          has_major_illness: hasMajorIllness,
-          has_injury: hasInjury,
-          has_consistent_training: hasConsistentTraining,
-          has_advanced_training: hasAdvancedTraining,
-          maf_hr: calculateMAFHR()
-        });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Error saving profile:', error);
-      setError(error.message || 'Error saving profile');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // Calculate MAF HR
   const calculateMAFHR = () => {
@@ -96,6 +70,35 @@ export default function MAFQuestionnaire() {
     else if (hasAdvancedTraining) modifiedHR += 10;
 
     return modifiedHR;
+  };
+
+  // Save user data
+  const saveProfile = async () => {
+    if (!user) return;
+    setError(null);
+
+    try {
+      setSaving(true);
+      const { error: supabaseError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          age: age ? parseInt(age) : null,
+          has_major_illness: hasMajorIllness,
+          has_injury: hasInjury,
+          has_consistent_training: hasConsistentTraining,
+          has_advanced_training: hasAdvancedTraining,
+          maf_hr: calculateMAFHR()
+        });
+
+      if (supabaseError) throw supabaseError;
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error saving profile:', error);
+      setError({ message: error.message });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!user) {
@@ -130,7 +133,7 @@ export default function MAFQuestionnaire() {
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600">{error}</p>
+              <p className="text-red-600">{error.message}</p>
             </div>
           )}
 

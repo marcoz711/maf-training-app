@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth-context';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import type { Profile, ProfileError } from '@/types/profile';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -14,8 +15,8 @@ const supabase = createClient(
 export default function Profile() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [error, setError] = useState<ProfileError | null>(null);
+  const [profileData, setProfileData] = useState<Profile | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -28,17 +29,18 @@ export default function Profile() {
       setError(null);
 
       try {
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (supabaseError) throw supabaseError;
         setProfileData(data);
-      } catch (error: any) {
+      } catch (err) {
+        const error = err as Error;
         console.error('Error loading profile:', error);
-        setError(error.message || 'Error loading profile');
+        setError({ message: error.message });
       } finally {
         setLoading(false);
       }
@@ -63,18 +65,19 @@ export default function Profile() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error: supabaseError } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (supabaseError) throw supabaseError;
 
       setPasswordSuccess(true);
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       console.error('Error updating password:', error);
-      setPasswordError(error.message || 'Error updating password');
+      setPasswordError(error.message);
     }
   };
 

@@ -52,7 +52,6 @@ const FitnessSyncerConnection = () => {
     if (!user) return;
     
     try {
-      setIsLoadingDataSources(true);
       const response = await fetch('/api/fitnesssyncer/data-sources', {
         headers: {
           'x-user-id': user.id,
@@ -95,10 +94,8 @@ const FitnessSyncerConnection = () => {
     } catch (error) {
       console.error('Error fetching data sources:', error);
       setDataSources([]);
-    } finally {
-      setIsLoadingDataSources(false);
     }
-  }, [user]);
+  }, [user, refreshToken]);
 
   const checkConnection = useCallback(async () => {
     if (!user) return;
@@ -144,7 +141,7 @@ const FitnessSyncerConnection = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, fetchDataSources]);
+  }, [user, refreshToken, fetchDataSources]);
 
   useEffect(() => {
     // Check for status or error parameters in the URL
