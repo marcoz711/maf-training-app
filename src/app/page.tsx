@@ -1,50 +1,70 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { LogoutButton } from "@/components/ui/logout-button";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from '@/contexts/auth-context';
+import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 export default function Home() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="max-w-4xl mx-auto mt-10 p-6">Loading...</div>;
-  }
+  const { user, signOut, loading } = useAuth();
 
   return (
-    <main className="max-w-4xl mx-auto mt-10 p-6 border rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold mb-6">Welcome to Our App</h1>
-      
-      <div className="p-4 bg-gray-100 rounded-lg mb-6">
-        {user ? (
-          <div className="space-y-4">
-            <p className="text-green-600 font-medium">
-              You are logged in as: <span className="font-bold">{user.email}</span>
+    <>
+      <Navigation />
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6">Welcome to MAF Training</h1>
+          
+          <div className="bg-gray-50 p-4 sm:p-6 rounded-lg mb-8">
+            {loading ? (
+              <p className="text-gray-600">Loading...</p>
+            ) : user ? (
+              <div className="space-y-4">
+                <p className="text-green-600 font-medium">
+                  You are logged in as: <br />
+                  <span className="text-gray-900">{user.email}</span>
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link 
+                    href="/profile" 
+                    className="w-full sm:w-auto text-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Your Profile
+                  </Link>
+                  <Link 
+                    href="/connect/fitnesssyncer" 
+                    className="w-full sm:w-auto text-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Manage FitnessSyncer
+                  </Link>
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-gray-600">Please log in to access the application.</p>
+                <Link
+                  href="/login"
+                  className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Login
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="prose max-w-none">
+            <p className="text-gray-600">
+              This is the main page of your application. The content here will change based on whether you&apos;re logged in or not.
             </p>
-            <div className="flex gap-4">
-              <Button asChild>
-                <Link href="/profile">Your Profile</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/connect/fitnesssyncer">Connect to FitnessSyncer</Link>
-              </Button>
-              <LogoutButton />
-            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-amber-600">You are not currently logged in.</p>
-            <Button asChild>
-              <Link href="/login">Go to Login</Link>
-            </Button>
-          </div>
-        )}
-      </div>
-      
-      <p className="text-gray-700">
-        This is the main page of your application. The content here will change based on whether you&apos;re logged in or not.
-      </p>
-    </main>
+        </div>
+      </main>
+    </>
   );
 }

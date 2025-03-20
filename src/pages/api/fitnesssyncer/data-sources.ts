@@ -29,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if token is expired
     if (new Date(connection.token_expiry) < new Date()) {
-      // Token is expired, refresh it (implementation needed)
       return res.status(401).json({ error: 'Token expired, please reconnect' });
     }
 
@@ -41,6 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!response.ok) {
+      // If the API returns an unauthorized error, the token might be invalid
+      if (response.status === 401) {
+        return res.status(401).json({ error: 'Token expired, please reconnect' });
+      }
       return res.status(response.status).json({ error: `Failed to fetch data sources: ${response.statusText}` });
     }
 
