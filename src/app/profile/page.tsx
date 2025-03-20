@@ -107,6 +107,12 @@ export default function Profile() {
       <Navigation />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600">{error.message}</p>
+            </div>
+          )}
+
           {/* MAF Heart Rate Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Your MAF Heart Rate</h2>

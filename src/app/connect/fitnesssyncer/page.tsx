@@ -21,7 +21,7 @@ const FitnessSyncerConnection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDataSources, setIsLoadingDataSources] = useState(false);
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     if (!user) return false;
     
     try {
@@ -46,12 +46,13 @@ const FitnessSyncerConnection = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [user]);
 
   const fetchDataSources = useCallback(async () => {
     if (!user) return;
     
     try {
+      setIsLoadingDataSources(true);
       const response = await fetch('/api/fitnesssyncer/data-sources', {
         headers: {
           'x-user-id': user.id,
@@ -94,6 +95,8 @@ const FitnessSyncerConnection = () => {
     } catch (error) {
       console.error('Error fetching data sources:', error);
       setDataSources([]);
+    } finally {
+      setIsLoadingDataSources(false);
     }
   }, [user, refreshToken]);
 
