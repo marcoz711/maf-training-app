@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-import { withErrorHandling, standardErrorResponse } from '@/lib/api';
+import { createClient } from '@/lib/supabase/server';
+import { withErrorHandling } from '@/lib/api';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
