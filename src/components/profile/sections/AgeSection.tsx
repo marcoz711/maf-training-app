@@ -2,9 +2,6 @@
 
 import { FormSection } from '../form-section';
 import { getAgeWarning } from '@/utils/maf-calculations';
-import { useState } from 'react';
-import { useProfile } from '@/hooks/use-profile';
-import { Input } from '@/components/ui/input';
 
 interface AgeSectionProps {
   age: string;
