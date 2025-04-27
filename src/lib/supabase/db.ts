@@ -78,10 +78,11 @@ export function createEmptyProfile(userId: string): Profile {
   console.log("Creating empty profile for user ID:", userId);
   return {
     id: userId,
+    user_id: userId,
     has_major_illness: false,
     has_injury: false,
     has_consistent_training: false,
-    has_advanced_training: false
+    has_advanced_training: false,
   };
 }
 
