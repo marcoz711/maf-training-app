@@ -20,7 +20,13 @@ export class ConnectionRepository implements Repository<Connection> {
       throw new DatabaseError("Failed to create connection");
     }
 
-    return connection;
+    return {
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    };
   }
 
   async findById(id: string): Promise<Connection | null> {
@@ -37,7 +43,17 @@ export class ConnectionRepository implements Repository<Connection> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return connection;
+    if (!connection) {
+      return null;
+    }
+
+    return {
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    };
   }
 
   async findAll(): Promise<Connection[]> {
@@ -49,7 +65,13 @@ export class ConnectionRepository implements Repository<Connection> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return connections || [];
+    return (connections || []).map(connection => ({
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    }));
   }
 
   async update(id: string, data: Partial<Connection>): Promise<Connection> {
@@ -68,7 +90,13 @@ export class ConnectionRepository implements Repository<Connection> {
       throw new DatabaseError("Failed to update connection");
     }
 
-    return connection;
+    return {
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    };
   }
 
   async delete(id: string): Promise<void> {
@@ -92,7 +120,13 @@ export class ConnectionRepository implements Repository<Connection> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return connections || [];
+    return (connections || []).map(connection => ({
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    }));
   }
 
   async findConnectionBetweenUsers(
@@ -112,6 +146,16 @@ export class ConnectionRepository implements Repository<Connection> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return connection;
+    if (!connection) {
+      return null;
+    }
+
+    return {
+      id: connection.id as string,
+      user_id_1: connection.user_id_1 as string,
+      user_id_2: connection.user_id_2 as string,
+      status: connection.status as "pending" | "accepted" | "rejected",
+      created_at: connection.created_at as string
+    };
   }
 } 

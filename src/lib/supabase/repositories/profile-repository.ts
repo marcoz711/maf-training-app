@@ -20,7 +20,17 @@ export class ProfileRepository implements Repository<Profile> {
       throw new DatabaseError("Failed to create profile");
     }
 
-    return profile;
+    return {
+      id: profile.id as string,
+      user_id: profile.user_id as string,
+      age: profile.age as number | null | undefined,
+      has_major_illness: profile.has_major_illness as boolean | null | undefined,
+      has_injury: profile.has_injury as boolean | null | undefined,
+      has_consistent_training: profile.has_consistent_training as boolean | null | undefined,
+      has_advanced_training: profile.has_advanced_training as boolean | null | undefined,
+      maf_hr: profile.maf_hr as number | null | undefined,
+      created_at: profile.created_at as string | undefined
+    };
   }
 
   async findById(id: string): Promise<Profile | null> {
@@ -37,7 +47,21 @@ export class ProfileRepository implements Repository<Profile> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return profile;
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      id: profile.id as string,
+      user_id: profile.user_id as string,
+      age: profile.age as number | null | undefined,
+      has_major_illness: profile.has_major_illness as boolean | null | undefined,
+      has_injury: profile.has_injury as boolean | null | undefined,
+      has_consistent_training: profile.has_consistent_training as boolean | null | undefined,
+      has_advanced_training: profile.has_advanced_training as boolean | null | undefined,
+      maf_hr: profile.maf_hr as number | null | undefined,
+      created_at: profile.created_at as string | undefined
+    };
   }
 
   async findAll(): Promise<Profile[]> {
@@ -49,7 +73,17 @@ export class ProfileRepository implements Repository<Profile> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return profiles || [];
+    return (profiles || []).map(profile => ({
+      id: profile.id as string,
+      user_id: profile.user_id as string,
+      age: profile.age as number | null | undefined,
+      has_major_illness: profile.has_major_illness as boolean | null | undefined,
+      has_injury: profile.has_injury as boolean | null | undefined,
+      has_consistent_training: profile.has_consistent_training as boolean | null | undefined,
+      has_advanced_training: profile.has_advanced_training as boolean | null | undefined,
+      maf_hr: profile.maf_hr as number | null | undefined,
+      created_at: profile.created_at as string | undefined
+    }));
   }
 
   async update(id: string, data: Partial<Profile>): Promise<Profile> {
@@ -68,7 +102,17 @@ export class ProfileRepository implements Repository<Profile> {
       throw new DatabaseError("Failed to update profile");
     }
 
-    return profile;
+    return {
+      id: profile.id as string,
+      user_id: profile.user_id as string,
+      age: profile.age as number | null | undefined,
+      has_major_illness: profile.has_major_illness as boolean | null | undefined,
+      has_injury: profile.has_injury as boolean | null | undefined,
+      has_consistent_training: profile.has_consistent_training as boolean | null | undefined,
+      has_advanced_training: profile.has_advanced_training as boolean | null | undefined,
+      maf_hr: profile.maf_hr as number | null | undefined,
+      created_at: profile.created_at as string | undefined
+    };
   }
 
   async delete(id: string): Promise<void> {
@@ -96,6 +140,20 @@ export class ProfileRepository implements Repository<Profile> {
       throw DatabaseError.fromPostgrestError(error);
     }
 
-    return profile;
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      id: profile.id as string,
+      user_id: profile.user_id as string,
+      age: profile.age as number | null | undefined,
+      has_major_illness: profile.has_major_illness as boolean | null | undefined,
+      has_injury: profile.has_injury as boolean | null | undefined,
+      has_consistent_training: profile.has_consistent_training as boolean | null | undefined,
+      has_advanced_training: profile.has_advanced_training as boolean | null | undefined,
+      maf_hr: profile.maf_hr as number | null | undefined,
+      created_at: profile.created_at as string | undefined
+    };
   }
 } 
