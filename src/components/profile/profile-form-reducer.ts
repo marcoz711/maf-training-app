@@ -80,10 +80,10 @@ export function profileFormReducer(state: ProfileFormState, action: ProfileFormA
     case 'INITIALIZE':
       return {
         age: action.profile.age?.toString() || '',
-        hasMajorIllness: action.profile.has_major_illness,
-        hasInjury: action.profile.has_injury,
-        hasConsistentTraining: action.profile.has_consistent_training,
-        hasAdvancedTraining: action.profile.has_advanced_training,
+        hasMajorIllness: action.profile.has_major_illness ?? false,
+        hasInjury: action.profile.has_injury ?? false,
+        hasConsistentTraining: action.profile.has_consistent_training ?? false,
+        hasAdvancedTraining: action.profile.has_advanced_training ?? false,
         mafHR: action.profile.maf_hr || null
       };
       
