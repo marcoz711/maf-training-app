@@ -1,32 +1,133 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { User, AuthError } from "@supabase/supabase-js";
 import { AuthContextType } from "@/types";
+import { useRouter } from "next/navigation";
 
 // Create context with undefined default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+type AuthState = {
+  user: User | null;
+  loading: boolean;
+  initialLoading: boolean;
+  signInLoading: boolean;
+  signUpLoading: boolean;
+  resetPasswordLoading: boolean;
+  error: string | null;
+};
 
 /**
  * Provider component that wraps app and makes auth object available to any
  * child component that calls useAuth().
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    initialLoading: true,
+    signInLoading: false,
+    signUpLoading: false,
+    resetPasswordLoading: false,
+    error: null,
+  });
+
   const supabase = createClient();
+
+  const clearError = useCallback(() => {
+    setState(prev => ({ ...prev, error: null }));
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      setState(prev => ({ ...prev, signInLoading: true, error: null }));
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      const authError = error as AuthError;
+      setState(prev => ({ 
+        ...prev, 
+        error: authError.message || 'Failed to sign in. Please check your credentials.'
+      }));
+      throw error;
+    } finally {
+      setState(prev => ({ ...prev, signInLoading: false }));
+    }
+  }, [supabase.auth]);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    try {
+      setState(prev => ({ ...prev, signUpLoading: true, error: null }));
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      const authError = error as AuthError;
+      setState(prev => ({ 
+        ...prev, 
+        error: authError.message || 'Failed to sign up. Please try again.'
+      }));
+      throw error;
+    } finally {
+      setState(prev => ({ ...prev, signUpLoading: false }));
+    }
+  }, [supabase.auth]);
+
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      setState(prev => ({ ...prev, resetPasswordLoading: true, error: null }));
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+    } catch (error) {
+      const authError = error as AuthError;
+      setState(prev => ({ 
+        ...prev, 
+        error: authError.message || 'Failed to send password reset email.'
+      }));
+      throw error;
+    } finally {
+      setState(prev => ({ ...prev, resetPasswordLoading: false }));
+    }
+  }, [supabase.auth]);
+
+  const signOut = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      await supabase.auth.signOut();
+      setState(prev => ({ ...prev, user: null }));
+      router.push('/login');
+    } catch (error) {
+      const authError = error as AuthError;
+      setState(prev => ({ 
+        ...prev, 
+        error: authError.message || 'Failed to sign out.'
+      }));
+    } finally {
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  }, [supabase.auth, router]);
 
   // Listen for changes on auth state
   useEffect(() => {
     const getUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        setState(prev => ({ 
+          ...prev, 
+          user: session?.user || null,
+          initialLoading: false,
+          loading: false 
+        }));
       } catch (error) {
         console.error("Error getting session:", error);
-      } finally {
-        setLoading(false);
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load session.',
+          initialLoading: false,
+          loading: false 
+        }));
       }
     };
 
@@ -36,7 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user || null);
+        setState(prev => ({ 
+          ...prev, 
+          user: session?.user || null,
+          loading: false 
+        }));
       }
     );
 
@@ -44,24 +149,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
-  // Sign out function
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
-  // Make the value object stable by memoizing it (only changes when deps change)
   const value = {
-    user,
-    loading,
-    signOut
+    ...state,
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
+    clearError
   };
 
-  // Only render children when no longer loading
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -79,4 +175,17 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+};
+
+export const useRequireAuth = (redirectTo = '/login') => {
+  const { user, loading, initialLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !initialLoading && !user) {
+      router.push(redirectTo);
+    }
+  }, [user, loading, initialLoading, router, redirectTo]);
+
+  return { user, loading: loading || initialLoading };
 }; 

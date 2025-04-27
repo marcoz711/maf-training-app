@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/auth-context';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
-import type { ProfileError } from '@/types/profile';
+import type { ProfileError } from '@/types';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',

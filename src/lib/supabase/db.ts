@@ -1,10 +1,10 @@
 import { createClient } from "./client";
-import { UserProfile } from "@/types";
+import { Profile } from "@/types";
 
 /**
  * Fetch user profile by user ID
  */
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+export async function getUserProfile(userId: string): Promise<Profile | null> {
   if (!userId) {
     console.error("getUserProfile called with empty userId");
     return null;
@@ -26,7 +26,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     }
     
     console.log("Profile fetch result:", data);
-    return data as UserProfile | null;
+    return data as Profile | null;
   } catch (err) {
     console.error("Unexpected error in getUserProfile:", err);
     throw err;
@@ -36,7 +36,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 /**
  * Save or update a user profile
  */
-export async function saveUserProfile(profile: UserProfile) {
+export async function saveUserProfile(profile: Profile) {
   if (!profile || !profile.id) {
     console.error("saveUserProfile called with invalid profile data", profile);
     throw new Error("Invalid profile data");
@@ -69,7 +69,7 @@ export async function saveUserProfile(profile: UserProfile) {
 /**
  * Initialize an empty profile for a new user
  */
-export function createEmptyProfile(userId: string): UserProfile {
+export function createEmptyProfile(userId: string): Profile {
   if (!userId) {
     console.error("createEmptyProfile called with empty userId");
     throw new Error("User ID is required");

@@ -1,27 +1,27 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { withErrorHandling, standardErrorResponse } from '@/lib/api';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return standardErrorResponse(res, 405, 'Method not allowed');
   }
 
   const { code, userId } = req.body;
 
   if (!code) {
-    return res.status(400).json({ error: 'Authorization code is required' });
+    return standardErrorResponse(res, 400, 'Authorization code is required', 'MISSING_CODE');
   }
 
   if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
+    return standardErrorResponse(res, 400, 'User ID is required', 'MISSING_USER_ID');
   }
 
-  try {
     // Exchange the authorization code for access token
     const tokenResponse = await fetch(process.env.FITNESSSYNCER_TOKEN_URL || '', {
       method: 'POST',
@@ -39,7 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (tokenData.error) {
       console.error('Error from FitnessSyncer:', tokenData);
-      return res.status(400).json({ error: tokenData.error_description || 'Failed to get access token' });
+    return standardErrorResponse(
+      res, 
+      400, 
+      tokenData.error_description || 'Failed to get access token',
+      'TOKEN_EXCHANGE_FAILED'
+    );
     }
 
     // Store tokens in the database
@@ -56,13 +61,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Database error:', error);
-      return res.status(500).json({ error: 'Failed to store connection' });
+    return standardErrorResponse(res, 500, 'Failed to store connection', 'DB_STORE_ERROR');
     }
 
-    // Return success
-    return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error in exchange token handler:', error);
-    return res.status(500).json({ error: 'Server error processing your request' });
-  }
-} 
+  return { success: true };
+}
+
+export default withErrorHandling(handler); 

@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, saveUserProfile, createEmptyProfile } from "@/lib/supabase/db";
 import { useAuth } from "@/contexts/auth-context";
-import { UserProfile } from "@/types";
+import { Profile } from "@/types";
 
 /**
  * Custom hook for managing user profile data
  */
 export function useProfile() {
   const { user, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
@@ -74,7 +74,7 @@ export function useProfile() {
   /**
    * Save profile data
    */
-  const saveProfile = async (updatedProfile: Partial<UserProfile>) => {
+  const saveProfile = async (updatedProfile: Partial<Profile>) => {
     if (!user || !profile) {
       setError("You must be logged in to save your profile");
       return false;
@@ -84,7 +84,7 @@ export function useProfile() {
       setSaveStatus("saving");
       
       // Merge current profile with updates
-      const newProfile: UserProfile = {
+      const newProfile: Profile = {
         ...profile,
         ...updatedProfile
       };

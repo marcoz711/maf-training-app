@@ -1,4 +1,4 @@
-import { UserProfile } from "@/types";
+import { Profile } from "@/types";
 
 export type ProfileFormState = {
   age: string;
@@ -16,7 +16,7 @@ export type ProfileFormAction =
   | { type: 'SET_CONSISTENT_TRAINING', value: boolean }
   | { type: 'SET_ADVANCED_TRAINING', value: boolean }
   | { type: 'SET_MAF_HR', value: number | null }
-  | { type: 'INITIALIZE', profile: UserProfile }
+  | { type: 'INITIALIZE', profile: Profile }
   | { type: 'RESET' };
 
 const initialState: ProfileFormState = {

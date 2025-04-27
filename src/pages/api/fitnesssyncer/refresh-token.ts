@@ -1,23 +1,23 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { withErrorHandling, standardErrorResponse } from '@/lib/api';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return standardErrorResponse(res, 405, 'Method not allowed');
   }
 
   const userId = req.headers['x-user-id'] as string;
 
   if (!userId) {
-    return res.status(401).json({ error: 'User ID is required' });
+    return standardErrorResponse(res, 401, 'User ID is required', 'MISSING_USER_ID');
   }
 
-  try {
     // Get the current connection with refresh token
     const { data: connection, error: connectionError } = await supabase
       .from('api_connections')
@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (connectionError || !connection || !connection.refresh_token) {
-      return res.status(404).json({ error: 'Valid connection not found' });
+    return standardErrorResponse(res, 404, 'Valid connection not found', 'NO_CONNECTION');
     }
 
     // Request new tokens using refresh token
@@ -46,14 +46,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Token refresh failed with status:', tokenResponse.status, 'Response:', errorText);
-      return res.status(tokenResponse.status).json({ error: 'Failed to refresh token' });
+    return standardErrorResponse(res, tokenResponse.status, 'Failed to refresh token', 'TOKEN_REFRESH_FAILED');
     }
 
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
       console.error('Error refreshing token:', tokenData);
-      return res.status(400).json({ error: tokenData.error_description || 'Failed to refresh token' });
+    return standardErrorResponse(res, 400, tokenData.error_description || 'Failed to refresh token', 'TOKEN_ERROR');
     }
 
     // Update tokens in database
@@ -71,12 +71,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (updateError) {
       console.error('Error updating tokens:', updateError);
-      return res.status(500).json({ error: 'Failed to update tokens' });
+    return standardErrorResponse(res, 500, 'Failed to update tokens', 'DB_UPDATE_ERROR');
     }
 
-    return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-} 
+  return { 
+    token_expiry: new Date(Date.now() + expires_in * 1000).toISOString(),
+    status: 'connected'
+  };
+}
+
+export default withErrorHandling(handler); 

@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useState, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/use-profile";
-import { UserProfile } from "@/types";
+import { Profile } from "@/types";
 import Link from "next/link";
 import { profileFormReducer } from "./profile-form-reducer";
 import { 
@@ -102,7 +102,7 @@ export function ProfileForm() {
       dispatch({ type: 'SET_MAF_HR', value: maf });
 
       // Prepare profile update
-      const updatedProfile: Partial<UserProfile> = {
+      const updatedProfile: Partial<Profile> = {
         age: userAge,
         has_major_illness: state.hasMajorIllness,
         has_injury: state.hasInjury,

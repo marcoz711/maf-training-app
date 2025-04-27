@@ -33,13 +33,20 @@ const FitnessSyncerConnection = () => {
         },
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
         console.error('Token refresh failed:', data.error);
         return false;
       }
       
+      // Check if we got a valid response with token_expiry and status
+      if (data.data?.token_expiry && data.data?.status === 'connected') {
       return true;
+      }
+      
+      console.error('Invalid refresh token response:', data);
+      return false;
     } catch (error) {
       console.error('Error refreshing token:', error);
       return false;
@@ -59,9 +66,10 @@ const FitnessSyncerConnection = () => {
         },
       });
       
+      const responseData = await response.json();
+      
       if (response.status === 401) {
-        const data = await response.json();
-        if (data.error === 'Token expired, please reconnect') {
+        if (responseData.error === 'Token expired, please reconnect') {
           // Try to refresh the token
           const refreshed = await refreshToken();
           if (refreshed) {
@@ -69,25 +77,22 @@ const FitnessSyncerConnection = () => {
             return fetchDataSources();
           }
         }
-        setError(data.error);
+        setError(responseData.error);
         setDataSources([]);
         return;
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        setError(responseData.error || 'Failed to fetch data sources');
+        setDataSources([]);
+        return;
+      }
       
+      // Handle the standardized success response
+      const data = responseData.data;
       if (Array.isArray(data)) {
         setDataSources(data);
         setError(null);
-      } else if (data.items && Array.isArray(data.items)) {
-        setDataSources(data.items);
-        setError(null);
-      } else if (data.error) {
-        console.log('API response:', data.error);
-        if (data.error !== 'FitnessSyncer connection not found') {
-          setError(data.error);
-        }
-        setDataSources([]);
       } else {
         console.error('Unexpected data format from API:', data);
         setDataSources([]);
@@ -111,7 +116,8 @@ const FitnessSyncerConnection = () => {
         },
       });
       
-      const connectionData = await connectionResponse.json();
+      const responseData = await connectionResponse.json();
+      const connectionData = responseData.data; // Get the data from the standardized response
       
       if (connectionData.connected) {
         if (connectionData.status === 'expired') {

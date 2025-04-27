@@ -1,20 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { withErrorHandling, standardErrorResponse } from '@/lib/api';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Extract code from query parameters
   const { code } = req.query;
 
   if (!code) {
-    return res.status(400).json({ error: 'Authorization code is missing' });
+    return res.redirect('/connect/fitnesssyncer?error=' + encodeURIComponent('Authorization code is missing'));
   }
 
-  try {
     // Exchange the code for access token
     const tokenResponse = await fetch(process.env.FITNESSSYNCER_TOKEN_URL || '', {
       method: 'POST',
@@ -32,10 +32,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (tokenData.error) {
       console.error('Error from FitnessSyncer:', tokenData);
-      return res.redirect(`/connect/fitnesssyncer?error=${encodeURIComponent(tokenData.error_description || 'Failed to get access token')}`);
+    return res.redirect(
+      '/connect/fitnesssyncer?error=' + 
+      encodeURIComponent(tokenData.error_description || 'Failed to get access token')
+    );
     }
 
-    // Get user from cookie session (you might need to implement your own auth check here)
+  // Get user from cookie session
     const { data: { user } } = await supabase.auth.getUser(req.cookies['supabase-auth-token']);
     
     if (!user) {
@@ -61,8 +64,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Redirect back to the connection page with success message
     return res.redirect('/connect/fitnesssyncer?status=connected');
-  } catch (error) {
-    console.error('Error in callback handler:', error);
-    return res.redirect('/connect/fitnesssyncer?error=Server error processing your request');
   }
-} 
+
+export default withErrorHandling(handler); 
