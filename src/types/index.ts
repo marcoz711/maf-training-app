@@ -28,6 +28,8 @@ export interface Profile {
   
   /** Timestamp when the profile was created */
   created_at?: string;
+
+  user_id: string;
 }
 
 /**
