@@ -54,7 +54,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           errorData.error_description || 'Failed to refresh token', 
           errorData.error || 'TOKEN_REFRESH_FAILED'
         );
-      } catch (e) {
+      } catch {
         return standardErrorResponse(
           res, 
           tokenResponse.status, 
