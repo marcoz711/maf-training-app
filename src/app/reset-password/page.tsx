@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
     try {
       await resetPassword(email);
       setIsSubmitted(true);
-    } catch (_error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };

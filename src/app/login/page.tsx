@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       router.push("/profile");
-    } catch (_error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };

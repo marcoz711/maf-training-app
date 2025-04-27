@@ -24,7 +24,7 @@ export default function SignUpPage() {
     try {
       await signUp(email, password);
       router.push("/profile");
-    } catch (_error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };
