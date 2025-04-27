@@ -20,7 +20,18 @@ export class ActivityRepository implements Repository<Activity> {
       throw new DatabaseError("Failed to create activity");
     }
 
-    return activity;
+    return {
+      id: activity.id as string,
+      user_id: activity.user_id as string,
+      date: activity.date as string,
+      type: activity.type as string,
+      duration: activity.duration as number,
+      distance: activity.distance as number | undefined,
+      avg_heart_rate: activity.avg_heart_rate as number | undefined,
+      max_heart_rate: activity.max_heart_rate as number | undefined,
+      notes: activity.notes as string | undefined,
+      created_at: activity.created_at as string
+    };
   }
 
   async findById(id: string): Promise<Activity | null> {
@@ -31,13 +42,25 @@ export class ActivityRepository implements Repository<Activity> {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return null;
-      }
-      throw DatabaseError.fromPostgrestError(error);
+      throw new DatabaseError(error.message);
     }
 
-    return activity;
+    if (!activity) {
+      return null;
+    }
+
+    return {
+      id: activity.id as string,
+      user_id: activity.user_id as string,
+      date: activity.date as string,
+      type: activity.type as string,
+      duration: activity.duration as number,
+      distance: activity.distance as number | undefined,
+      avg_heart_rate: activity.avg_heart_rate as number | undefined,
+      max_heart_rate: activity.max_heart_rate as number | undefined,
+      notes: activity.notes as string | undefined,
+      created_at: activity.created_at as string
+    };
   }
 
   async findAll(): Promise<Activity[]> {
@@ -46,10 +69,21 @@ export class ActivityRepository implements Repository<Activity> {
       .select("*");
 
     if (error) {
-      throw DatabaseError.fromPostgrestError(error);
+      throw new DatabaseError(error.message);
     }
 
-    return activities || [];
+    return (activities || []).map(activity => ({
+      id: activity.id as string,
+      user_id: activity.user_id as string,
+      date: activity.date as string,
+      type: activity.type as string,
+      duration: activity.duration as number,
+      distance: activity.distance as number | undefined,
+      avg_heart_rate: activity.avg_heart_rate as number | undefined,
+      max_heart_rate: activity.max_heart_rate as number | undefined,
+      notes: activity.notes as string | undefined,
+      created_at: activity.created_at as string
+    }));
   }
 
   async update(id: string, data: Partial<Activity>): Promise<Activity> {
@@ -61,14 +95,25 @@ export class ActivityRepository implements Repository<Activity> {
       .single();
 
     if (error) {
-      throw DatabaseError.fromPostgrestError(error);
+      throw new DatabaseError(error.message);
     }
 
     if (!activity) {
       throw new DatabaseError("Failed to update activity");
     }
 
-    return activity;
+    return {
+      id: activity.id as string,
+      user_id: activity.user_id as string,
+      date: activity.date as string,
+      type: activity.type as string,
+      duration: activity.duration as number,
+      distance: activity.distance as number | undefined,
+      avg_heart_rate: activity.avg_heart_rate as number | undefined,
+      max_heart_rate: activity.max_heart_rate as number | undefined,
+      notes: activity.notes as string | undefined,
+      created_at: activity.created_at as string
+    };
   }
 
   async delete(id: string): Promise<void> {
@@ -78,7 +123,7 @@ export class ActivityRepository implements Repository<Activity> {
       .eq("id", id);
 
     if (error) {
-      throw DatabaseError.fromPostgrestError(error);
+      throw new DatabaseError(error.message);
     }
   }
 
@@ -105,7 +150,18 @@ export class ActivityRepository implements Repository<Activity> {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     return {
-      data: activities || [],
+      data: (activities || []).map(activity => ({
+        id: activity.id as string,
+        user_id: activity.user_id as string,
+        date: activity.date as string,
+        type: activity.type as string,
+        duration: activity.duration as number,
+        distance: activity.distance as number | undefined,
+        avg_heart_rate: activity.avg_heart_rate as number | undefined,
+        max_heart_rate: activity.max_heart_rate as number | undefined,
+        notes: activity.notes as string | undefined,
+        created_at: activity.created_at as string
+      })),
       count: totalCount,
       page,
       pageSize,
@@ -123,13 +179,23 @@ export class ActivityRepository implements Repository<Activity> {
       .select("*")
       .eq("user_id", userId)
       .gte("date", startDate.toISOString())
-      .lte("date", endDate.toISOString())
-      .order("date", { ascending: true });
+      .lte("date", endDate.toISOString());
 
     if (error) {
-      throw DatabaseError.fromPostgrestError(error);
+      throw new DatabaseError(error.message);
     }
 
-    return activities || [];
+    return (activities || []).map(activity => ({
+      id: activity.id as string,
+      user_id: activity.user_id as string,
+      date: activity.date as string,
+      type: activity.type as string,
+      duration: activity.duration as number,
+      distance: activity.distance as number | undefined,
+      avg_heart_rate: activity.avg_heart_rate as number | undefined,
+      max_heart_rate: activity.max_heart_rate as number | undefined,
+      notes: activity.notes as string | undefined,
+      created_at: activity.created_at as string
+    }));
   }
 } 
