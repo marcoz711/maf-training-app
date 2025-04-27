@@ -36,19 +36,23 @@ const FitnessSyncerConnection = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        console.error('Token refresh failed:', data.error);
+        console.error('Token refresh failed:', data.error || 'Unknown error');
+        setError(data.error || 'Failed to refresh token');
         return false;
       }
       
       // Check if we got a valid response with token_expiry and status
       if (data.data?.token_expiry && data.data?.status === 'connected') {
-      return true;
+        setError(null);
+        return true;
       }
       
       console.error('Invalid refresh token response:', data);
+      setError('Invalid response from server');
       return false;
     } catch (error) {
       console.error('Error refreshing token:', error);
+      setError('Failed to refresh token. Please try reconnecting.');
       return false;
     } finally {
       setIsRefreshing(false);

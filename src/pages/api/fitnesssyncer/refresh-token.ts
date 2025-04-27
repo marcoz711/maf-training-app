@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { withErrorHandling, standardErrorResponse } from '@/lib/api';
+import { withErrorHandling, standardErrorResponse, standardSuccessResponse } from '@/lib/api';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -46,14 +46,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Token refresh failed with status:', tokenResponse.status, 'Response:', errorText);
-    return standardErrorResponse(res, tokenResponse.status, 'Failed to refresh token', 'TOKEN_REFRESH_FAILED');
+      try {
+        const errorData = JSON.parse(errorText);
+        return standardErrorResponse(
+          res, 
+          tokenResponse.status, 
+          errorData.error_description || 'Failed to refresh token', 
+          errorData.error || 'TOKEN_REFRESH_FAILED'
+        );
+      } catch (e) {
+        return standardErrorResponse(
+          res, 
+          tokenResponse.status, 
+          'Failed to refresh token', 
+          'TOKEN_REFRESH_FAILED'
+        );
+      }
     }
 
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
       console.error('Error refreshing token:', tokenData);
-    return standardErrorResponse(res, 400, tokenData.error_description || 'Failed to refresh token', 'TOKEN_ERROR');
+      return standardErrorResponse(
+        res, 
+        400, 
+        tokenData.error_description || 'Failed to refresh token', 
+        tokenData.error || 'TOKEN_ERROR'
+      );
     }
 
     // Update tokens in database
@@ -71,13 +91,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (updateError) {
       console.error('Error updating tokens:', updateError);
-    return standardErrorResponse(res, 500, 'Failed to update tokens', 'DB_UPDATE_ERROR');
+      return standardErrorResponse(
+        res, 
+        500, 
+        'Failed to update tokens in database', 
+        'DB_UPDATE_ERROR'
+      );
     }
 
-  return { 
-    token_expiry: new Date(Date.now() + expires_in * 1000).toISOString(),
-    status: 'connected'
-  };
+    return standardSuccessResponse(res, { 
+      token_expiry: new Date(Date.now() + expires_in * 1000).toISOString(),
+      status: 'connected'
+    });
 }
 
 export default withErrorHandling(handler); 

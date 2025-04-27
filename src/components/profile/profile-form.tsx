@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState, useCallback, memo } from "react";
+import { useEffect, useReducer, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/use-profile";
 import { Profile } from "@/types";
@@ -8,23 +8,13 @@ import Link from "next/link";
 import { profileFormReducer } from "./profile-form-reducer";
 import { 
   calculateMafHR, 
-  validateProfileSelections, 
-  getAgeWarning 
+  validateProfileSelections
 } from "@/utils/maf-calculations";
 import { ErrorBoundary, DefaultErrorFallback } from "@/components/error-boundary";
-
-// Memoized MAF Heart Rate display component
-const MAFDisplay = memo(function MAFDisplay({ mafHR }: { mafHR: number | null }) {
-  if (mafHR === null) return null;
-  
-  return (
-    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-      <p className="text-lg text-green-800">
-        Your MAF HR: <strong>{mafHR} BPM</strong>
-      </p>
-    </div>
-  );
-});
+import { AgeSection } from "./sections/AgeSection";
+import { HealthSection } from "./sections/HealthSection";
+import { TrainingSection } from "./sections/TrainingSection";
+import { MAFDisplay } from "./sections/MAFDisplay";
 
 export function ProfileForm() {
   const { profile, loading, error: apiError, saveProfile, saveStatus } = useProfile();
@@ -58,21 +48,6 @@ export function ProfileForm() {
       hasAdvancedTraining: state.hasAdvancedTraining
     });
   }, [state.hasMajorIllness, state.hasInjury, state.hasConsistentTraining, state.hasAdvancedTraining]);
-
-  // Handler functions
-  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAge = e.target.value;
-    console.log("Setting age to:", newAge);
-    dispatch({ type: 'SET_AGE', value: newAge });
-    
-    // Update age warning if needed
-    if (newAge) {
-      const ageWarning = getAgeWarning(Number(newAge));
-      setWarning(ageWarning);
-    } else {
-      setWarning(null);
-    }
-  };
 
   async function handleSave() {
     try {
@@ -122,7 +97,6 @@ export function ProfileForm() {
   }
 
   if (loading) return <p>Loading profile data...</p>;
-
   if (!profile) return <p>No profile data available. Please log in.</p>;
 
   return (
@@ -148,93 +122,28 @@ export function ProfileForm() {
         {saveStatus === "success" && <p className="text-green-500 mb-4">Profile saved successfully!</p>}
         {saveStatus === "error" && <p className="text-red-500 mb-4">Error saving profile. Please try again.</p>}
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-          <input
-            type="number"
-            value={state.age}
-            onChange={handleAgeChange}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            min="1"
-            max="120"
-          />
-        </div>
+        <AgeSection
+          age={state.age}
+          warning={warning}
+          onAgeChange={(value) => dispatch({ type: 'SET_AGE', value })}
+          onWarningChange={setWarning}
+        />
 
-        {warning && <p className="text-yellow-500 mb-4">{warning}</p>}
+        <HealthSection
+          hasMajorIllness={state.hasMajorIllness}
+          hasInjury={state.hasInjury}
+          onMajorIllnessChange={(value) => dispatch({ type: 'SET_MAJOR_ILLNESS', value })}
+          onInjuryChange={(value) => dispatch({ type: 'SET_INJURY', value })}
+        />
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Are you recovering from a major illness (heart disease, any operation or hospital stay, etc.), are in rehabilitation, are on any regular medication, or are in Stage 3 (chronic) overtraining (burnout)?</label>
-          <div className="flex gap-4">
-            <Button 
-              variant={state.hasMajorIllness ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_MAJOR_ILLNESS', value: true })}
-            >
-              Yes
-            </Button>
-            <Button 
-              variant={!state.hasMajorIllness ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_MAJOR_ILLNESS', value: false })}
-            >
-              No
-            </Button>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Are you injured, have regressed or not improved in training (such as poor MAF Tests) or competition, get more than two colds, flu or other infections per year, have seasonal allergies or asthma, are overfat, are in Stage 1 or 2 of overtraining, or if you have been inconsistent, just starting, or just getting back into training?</label>
-          <div className="flex gap-4">
-            <Button 
-              variant={state.hasInjury ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_INJURY', value: true })}
-            >
-              Yes
-            </Button>
-            <Button 
-              variant={!state.hasInjury ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_INJURY', value: false })}
-            >
-              No
-            </Button>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Have you been training consistently (4+ times per week) for <b>up to 2 years</b> without any of the problems mentioned above?</label>
-          <div className="flex gap-4">
-            <Button 
-              variant={state.hasConsistentTraining ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_CONSISTENT_TRAINING', value: true })}
-              disabled={state.hasMajorIllness || state.hasInjury}
-            >
-              Yes
-            </Button>
-            <Button 
-              variant={!state.hasConsistentTraining ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_CONSISTENT_TRAINING', value: false })}
-            >
-              No
-            </Button>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Have you been training for <b>more than 2 years</b> without any of the problems listed above, have made progress in your MAF Tests, improved competitively and are without injury?</label>
-          <div className="flex gap-4">
-            <Button 
-              variant={state.hasAdvancedTraining ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_ADVANCED_TRAINING', value: true })}
-              disabled={state.hasMajorIllness || state.hasInjury}
-            >
-              Yes
-            </Button>
-            <Button 
-              variant={!state.hasAdvancedTraining ? "default" : "outline"} 
-              onClick={() => dispatch({ type: 'SET_ADVANCED_TRAINING', value: false })}
-            >
-              No
-            </Button>
-          </div>
-        </div>
+        <TrainingSection
+          hasConsistentTraining={state.hasConsistentTraining}
+          hasAdvancedTraining={state.hasAdvancedTraining}
+          hasMajorIllness={state.hasMajorIllness}
+          hasInjury={state.hasInjury}
+          onConsistentTrainingChange={(value) => dispatch({ type: 'SET_CONSISTENT_TRAINING', value })}
+          onAdvancedTrainingChange={(value) => dispatch({ type: 'SET_ADVANCED_TRAINING', value })}
+        />
 
         <Button 
           onClick={handleSave} 
