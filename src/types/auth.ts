@@ -1,12 +1,8 @@
 export interface User {
   id: string;
   email?: string;
-  user_metadata?: {
-    [key: string]: any;
-  };
-  app_metadata?: {
-    [key: string]: any;
-  };
+  user_metadata?: Record<string, string | number | boolean | null>;
+  app_metadata?: Record<string, string | number | boolean | null>;
   created_at?: string;
   updated_at?: string;
   aud?: string;
