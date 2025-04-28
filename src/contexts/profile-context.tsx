@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-interface Profile {
+export interface Profile {
   age: number;
   has_major_illness: boolean;
   has_injury: boolean;
@@ -9,7 +9,7 @@ interface Profile {
   maf_hr: number;
 }
 
-interface ProfileContextType {
+export interface ProfileContextType {
   profile: Profile | null;
   loading: boolean;
   error: string | null;

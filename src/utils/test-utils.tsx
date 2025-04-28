@@ -2,6 +2,7 @@ import React from 'react';
 import { render as rtlRender } from '@testing-library/react';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ProfileProvider } from '@/contexts/profile-context';
+import { ProfileContextType } from '@/contexts/profile-context';
 
 // Mock implementations
 const mockAuthContext = {
@@ -12,7 +13,7 @@ const mockAuthContext = {
   error: null,
 };
 
-const mockProfileContext = {
+const mockProfileContext: ProfileContextType = {
   profile: null,
   loading: false,
   error: null,
@@ -23,7 +24,7 @@ const mockProfileContext = {
 function render(ui: React.ReactElement, { ...renderOptions } = {}) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <AuthProvider value={mockAuthContext}>
+      <AuthProvider>
         <ProfileProvider value={mockProfileContext}>
           {children}
         </ProfileProvider>
