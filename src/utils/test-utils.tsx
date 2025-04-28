@@ -4,15 +4,6 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { ProfileProvider } from '@/contexts/profile-context';
 import { ProfileContextType } from '@/contexts/profile-context';
 
-// Mock implementations
-const mockAuthContext = {
-  user: null,
-  signIn: jest.fn(),
-  signOut: jest.fn(),
-  loading: false,
-  error: null,
-};
-
 const mockProfileContext: ProfileContextType = {
   profile: null,
   loading: false,
