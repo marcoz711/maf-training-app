@@ -40,7 +40,7 @@ export function DataLoadingErrorFallback({ onRetry }: { onRetry: () => void }) {
         <div className="ml-3">
           <h2 className="text-lg font-bold text-yellow-800">Data Loading Error</h2>
           <p className="text-sm text-yellow-600">
-            We couldn't load the data. Please try again.
+            We couldn&apos;t load the data. Please try again.
           </p>
         </div>
       </div>

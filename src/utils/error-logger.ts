@@ -47,7 +47,7 @@ class ErrorLogger {
     }
   }
 
-  private async logToAnalytics(error: Error, context?: ErrorContext): Promise<void> {
+  private async logToAnalytics(): Promise<void> {
     if (!this.analyticsEnabled) return;
 
     try {
@@ -64,7 +64,7 @@ class ErrorLogger {
     context?: ErrorContext
   ): Promise<void> {
     this.logToConsole(error, errorInfo, context);
-    await this.logToAnalytics(error, context);
+    await this.logToAnalytics();
   }
 
   public async logUIError(

@@ -46,7 +46,7 @@ export function AuthErrorFallback() {
         <div className="ml-3">
           <h2 className="text-lg font-bold text-red-800">Authentication Error</h2>
           <p className="text-sm text-red-600">
-            Your session has expired or you don't have permission to access this resource.
+            Your session has expired or you don&apos;t have permission to access this resource.
           </p>
         </div>
       </div>

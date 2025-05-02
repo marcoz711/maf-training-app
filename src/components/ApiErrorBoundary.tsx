@@ -18,12 +18,14 @@ export function ApiErrorBoundary({
   onRetry,
   fallback,
 }: ApiErrorBoundaryProps) {
+  const handleRetry = onRetry || (() => window.location.reload());
+
   return (
     <ErrorBoundary
       errorType="api"
       componentName={componentName}
-      retry={onRetry}
-      fallback={fallback}
+      retry={handleRetry}
+      fallback={fallback || <ApiErrorFallback onRetry={handleRetry} endpoint={endpoint} />}
     >
       {children}
     </ErrorBoundary>
