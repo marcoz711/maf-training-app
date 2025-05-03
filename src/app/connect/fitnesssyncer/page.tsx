@@ -169,9 +169,13 @@ const FitnessSyncerConnection = () => {
 
     // Check connection status on load
     if (user) {
-      checkConnection();
+      checkConnection().catch(error => {
+        console.error('Error checking connection:', error);
+        setConnectionStatus('Connection Error');
+        setIsConnected(false);
+      });
     }
-  }, [user, checkConnection]);
+  }, []); // Empty dependency array to run only once on mount
 
   const handleConnect = async () => {
     try {
@@ -182,6 +186,33 @@ const FitnessSyncerConnection = () => {
     } catch (error) {
       console.error('Error connecting to FitnessSyncer:', error);
       setConnectionStatus('Connection Failed');
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/fitnesssyncer/disconnect', {
+        method: 'POST',
+        headers: {
+          'x-user-id': user?.id || '',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setConnectionStatus('Not Connected');
+        setIsConnected(false);
+        setDataSources([]);
+      }
+    } catch (error) {
+      console.error('Error disconnecting from FitnessSyncer:', error);
+      setError('Failed to disconnect from FitnessSyncer');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -307,13 +338,18 @@ const FitnessSyncerConnection = () => {
                 )}
                 
                 {isConnected && (
-                  <button 
-                    className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" 
-                    onClick={handleConnect}
-                    disabled={isRefreshing}
-                  >
-                    Reconnect to FitnessSyncer
-                  </button>
+                  <div className="space-y-4">
+                    <button 
+                      className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" 
+                      onClick={handleDisconnect}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Disconnecting...' : 'Disconnect from FitnessSyncer'}
+                    </button>
+                    <p className="text-sm text-gray-600">
+                      Disconnecting will remove your FitnessSyncer connection. You can connect again at any time.
+                    </p>
+                  </div>
                 )}
               </>
             )}
