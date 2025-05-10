@@ -378,6 +378,7 @@ const FitnessSyncerConnection = () => {
               ) : (
                 <p className="text-gray-600">No data sources available</p>
               )}
+              {user && <SyncActivitiesButton userId={user.id} refreshToken={refreshToken} />}
             </div>
           )}
         </div>
@@ -385,5 +386,55 @@ const FitnessSyncerConnection = () => {
     </>
   );
 };
+
+type SyncActivitiesButtonProps = { userId: string, refreshToken: () => Promise<boolean> };
+
+function SyncActivitiesButton({ userId, refreshToken }: SyncActivitiesButtonProps) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSync = async () => {
+    setLoading(true);
+    setResult(null);
+    setError(null);
+    try {
+      const refreshed = await refreshToken();
+      if (!refreshed) {
+        setError('Could not refresh token. Please reconnect.');
+        setLoading(false);
+        return;
+      }
+      const res = await fetch('/api/fitnesssyncer/sync-activities', {
+        method: 'POST',
+        headers: { 'x-user-id': userId },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Sync failed');
+      } else {
+        setResult(`Sync complete! Inserted ${data.inserted} new activities.`);
+      }
+    } catch (err: any) {
+      setError('Network or server error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="w-full sm:w-auto flex flex-col items-center mt-6">
+      <button
+        onClick={handleSync}
+        disabled={loading}
+        className="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+      >
+        {loading ? 'Syncing...' : 'Sync FitnessSyncer Activities'}
+      </button>
+      {result && <p className="mt-2 text-green-700 text-sm">{result}</p>}
+      {error && <p className="mt-2 text-red-600 text-sm">{error}</p>}
+    </div>
+  );
+}
 
 export default FitnessSyncerConnection; 

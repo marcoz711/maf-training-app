@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
+import React, { useState } from 'react';
 
 export default function Home() {
   const { user, signOut, loading } = useAuth();
